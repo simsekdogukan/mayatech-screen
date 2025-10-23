@@ -181,7 +181,7 @@
     
     <div class="pdf-container">
         {% if screen.pdf_path %}
-        <iframe src="/static/pdfs/{{ screen.pdf_path.split('/')[-1] }}?t={{ current_time.replace(' ', '_').replace(':', '-') }}" frameborder="0"></iframe>
+        <iframe src="/static/pdfs/{{ screen.pdf_path.split('/')[-1] }}?t={{ current_time.replace(' ', '_').replace(':', '-') }}#toolbar=0" frameborder="0"></iframe>
         {% else %}
         <div style="display: flex; justify-content: center; align-items: center; height: 100vh; color: #5f6368;">
             <div style="text-align: center;">
