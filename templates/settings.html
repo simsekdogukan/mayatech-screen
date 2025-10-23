@@ -1,0 +1,579 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mayatech Ekran Yöneticisi</title>
+    <style>
+        :root {
+            --bg-color: #f8f9fa;
+            --card-bg: white;
+            --text-color: #202124;
+            --border-color: #dadce0;
+            --primary-color: #1a73e8;
+            --input-bg: white;
+            --input-border: #dadce0;
+            --header-bg: white;
+            --nav-bg: #f8f9fa;
+        }
+        
+        [data-theme="dark"] {
+            --bg-color: #121212;
+            --card-bg: #1e1e1e;
+            --text-color: #e8eaed;
+            --border-color: #3c4043;
+            --primary-color: #4285f4;
+            --input-bg: #2d2d2d;
+            --input-border: #3c4043;
+            --header-bg: #1e1e1e;
+            --nav-bg: #121212;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Google Sans', 'Roboto', 'Segoe UI', system-ui, sans-serif;
+            background: var(--bg-color);
+            color: var(--text-color);
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+        
+        .header {
+            background: var(--header-bg);
+            border-bottom: 1px solid var(--border-color);
+            padding: 0 24px;
+            height: 64px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+            transition: background-color 0.3s ease, border-color 0.3s ease;
+        }
+        
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 24px;
+        }
+        
+        .logo {
+            font-size: 22px;
+            font-weight: 400;
+            color: var(--primary-color);
+            text-decoration: none !important;
+            transition: color 0.3s ease;
+        }
+        
+        .logo:hover {
+            color: var(--primary-color);
+            text-decoration: none !important;
+        }
+        
+        .logo:visited {
+            text-decoration: none !important;
+        }
+        
+        .logo:focus {
+            text-decoration: none !important;
+        }
+        
+        .nav-menu {
+            display: flex;
+            list-style: none;
+            gap: 8px;
+        }
+        
+        .nav-item {
+            padding: 8px 16px;
+            border-radius: 4px;
+            transition: background-color 0.2s;
+        }
+        
+        .nav-item:hover {
+            background: var(--nav-bg);
+        }
+        
+        .nav-item a {
+            text-decoration: none;
+            color: var(--text-color);
+            font-size: 14px;
+            font-weight: 500;
+            transition: color 0.3s ease;
+        }
+        
+        .nav-item.active {
+            background: var(--nav-bg);
+        }
+        
+        .nav-item.active a {
+            color: var(--primary-color);
+        }
+        
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+        
+        .user-info {
+            color: var(--text-color);
+            font-size: 14px;
+            opacity: 0.7;
+            transition: color 0.3s ease;
+        }
+        
+        /* Google Style User Menu */
+        .user-menu {
+            position: relative;
+            display: inline-block;
+        }
+        
+        .user-avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: var(--primary-color);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 600;
+            font-size: 14px;
+            border: 2px solid var(--border-color);
+        }
+        
+        .user-avatar:hover {
+            background: var(--primary-color);
+            transform: scale(1.05);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+        }
+        
+        .user-dropdown {
+            position: absolute;
+            top: 100%;
+            right: 0;
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            min-width: 200px;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(-10px);
+            transition: all 0.3s ease;
+        }
+        
+        .user-dropdown.show {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+        }
+        
+        .user-dropdown-item {
+            display: block;
+            padding: 12px 16px;
+            color: var(--text-color);
+            text-decoration: none;
+            transition: background-color 0.3s ease;
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .user-dropdown-item:last-child {
+            border-bottom: none;
+        }
+        
+        .user-dropdown-item:hover {
+            background: var(--nav-bg);
+        }
+        
+        .user-dropdown-item.danger {
+            color: #d32f2f;
+        }
+        
+        .user-dropdown-item.danger:hover {
+            background: var(--nav-bg);
+        }
+        
+        .btn {
+            padding: 8px 16px;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            background: var(--card-bg);
+            color: var(--text-color);
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .btn:hover {
+            background: var(--nav-bg);
+            border-color: var(--primary-color);
+        }
+        
+        .btn-primary {
+            background: var(--primary-color);
+            color: white;
+            border-color: var(--primary-color);
+        }
+        
+        .btn-primary:hover {
+            background: #1557b0;
+            border-color: #1557b0;
+        }
+        
+        .btn-danger {
+            background: #ea4335;
+            color: white;
+            border-color: #ea4335;
+        }
+        
+        .btn-danger:hover {
+            background: #d33b2c;
+            border-color: #d33b2c;
+        }
+        
+        .main-content {
+            margin-top: 64px;
+            padding: 24px;
+            max-width: 1200px;
+            margin-left: auto;
+            margin-right: auto;
+            padding-bottom: 80px;
+        }
+        
+        .card {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24);
+            margin-bottom: 24px;
+            overflow: hidden;
+            transition: background-color 0.3s ease, border-color 0.3s ease;
+        }
+        
+        .card-header {
+            padding: 16px 24px;
+            border-bottom: 1px solid var(--border-color);
+            background: var(--nav-bg);
+            transition: background-color 0.3s ease, border-color 0.3s ease;
+        }
+        
+        .card-title {
+            font-size: 18px;
+            font-weight: 500;
+            color: var(--text-color);
+            transition: color 0.3s ease;
+        }
+        
+        .card-content {
+            padding: 24px;
+            background: var(--card-bg);
+            transition: background-color 0.3s ease;
+        }
+        
+        .form-group {
+            margin-bottom: 16px;
+        }
+        
+        label {
+            display: block;
+            color: var(--text-color);
+            font-weight: 500;
+            margin-bottom: 8px;
+            font-size: 14px;
+            transition: color 0.3s ease;
+        }
+        
+        input[type="text"],
+        input[type="password"] {
+            width: 100%;
+            padding: 12px 16px;
+            border: 1px solid var(--input-border);
+            border-radius: 4px;
+            font-size: 16px;
+            background: var(--input-bg);
+            color: var(--text-color);
+            transition: border-color 0.2s, background-color 0.3s ease, color 0.3s ease;
+            font-family: inherit;
+        }
+        
+        input[type="text"]:focus,
+        input[type="password"]:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            border-width: 2px;
+        }
+        
+        .time-info {
+            color: var(--text-color);
+            font-size: 12px;
+            margin-top: 8px;
+            opacity: 0.7;
+            transition: color 0.3s ease;
+        }
+        
+        .footer {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: var(--header-bg);
+            color: var(--text-color);
+            text-align: center;
+            padding: 12px;
+            font-size: 12px;
+            font-weight: 400;
+            z-index: 999;
+            border-top: 1px solid var(--border-color);
+            transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+        }
+        
+        .theme-toggle {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 50%;
+            width: 36px;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-right: 12px;
+        }
+        
+        .theme-toggle:hover {
+            transform: scale(1.1);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        
+        .theme-toggle svg {
+            width: 18px;
+            height: 18px;
+            fill: var(--text-color);
+        }
+        
+        /* Hamburger Menu */
+        .hamburger {
+            display: none;
+            flex-direction: column;
+            cursor: pointer;
+            padding: 8px;
+        }
+        
+        .hamburger span {
+            width: 25px;
+            height: 3px;
+            background: var(--text-color);
+            margin: 3px 0;
+            transition: 0.3s;
+        }
+        
+        .mobile-menu {
+            display: none;
+            position: fixed;
+            top: 64px;
+            left: 0;
+            right: 0;
+            background: var(--header-bg);
+            border-bottom: 1px solid var(--border-color);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+            z-index: 999;
+            transition: background-color 0.3s ease, border-color 0.3s ease;
+        }
+        
+        .mobile-menu.show {
+            display: block;
+        }
+        
+        .mobile-menu ul {
+            list-style: none;
+            padding: 16px 24px;
+        }
+        
+        .mobile-menu li {
+            margin-bottom: 8px;
+        }
+        
+        .mobile-menu a {
+            text-decoration: none;
+            color: var(--text-color);
+            font-size: 16px;
+            font-weight: 500;
+            padding: 12px 0;
+            display: block;
+            transition: color 0.3s ease;
+        }
+        
+        .mobile-menu a:hover {
+            color: var(--primary-color);
+        }
+        
+        @media (max-width: 768px) {
+            .header {
+                padding: 0 16px;
+            }
+            
+            .nav-menu {
+                display: none;
+            }
+            
+            .hamburger {
+                display: flex;
+            }
+            
+            .main-content {
+                padding: 16px;
+                padding-bottom: 80px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="header-left">
+            <a href="/admin" class="logo">Mayatech Ekran Yöneticisi</a>
+            <ul class="nav-menu">
+                <li class="nav-item">
+                    <a href="/admin">Ana Sayfa</a>
+                </li>
+                <li class="nav-item">
+                    <a href="/admin/logs">Log Kayıtları</a>
+                </li>
+            </ul>
+        </div>
+        <div class="header-right">
+            <button class="theme-toggle" onclick="toggleTheme()" title="Tema Değiştir">
+                <svg id="theme-icon" viewBox="0 0 24 24">
+                    <path d="M12 3c-4.97 0-9 4.03-9 9s4.03 9 9 9 9-4.03 9-9c0-.46-.04-.92-.1-1.36-.98 1.37-2.58 2.26-4.4 2.26-2.98 0-5.4-2.42-5.4-5.4 0-1.81.89-3.42 2.26-4.4-.44-.06-.9-.1-1.36-.1z"/>
+                </svg>
+            </button>
+            <div class="user-menu">
+                <div class="user-avatar" onclick="toggleUserMenu()">
+                    {{ session.username[0].upper() }}
+                </div>
+                <div class="user-dropdown" id="userDropdown">
+                    <a href="/admin/settings" class="user-dropdown-item">
+                        Ayarlar
+                    </a>
+                    <a href="/logout" class="user-dropdown-item danger">
+                        Çıkış
+                    </a>
+                </div>
+            </div>
+            <div class="hamburger" onclick="toggleMobileMenu()">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+        </div>
+    </div>
+    
+    <div class="mobile-menu" id="mobileMenu">
+        <ul>
+            <li><a href="/admin">Ana Sayfa</a></li>
+            <li><a href="/admin/logs">Log Kayıtları</a></li>
+            <li><a href="/admin/settings">Ayarlar</a></li>
+        </ul>
+    </div>
+    
+    <div class="main-content">
+        <div class="card">
+            <div class="card-header">
+                <div class="card-title">Ayarlar</div>
+                <div class="time-info">Son güncelleme: {{ current_time }}</div>
+            </div>
+            <div class="card-content">
+                <form method="POST" action="/admin/settings">
+                    <div class="form-group">
+                        <label for="username">Kullanıcı Adı:</label>
+                        <input type="text" id="username" name="username" value="{{ session.username }}" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="password">Yeni Şifre:</label>
+                        <input type="password" id="password" name="password" placeholder="Yeni şifre girin (boş bırakırsanız değişmez)">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="confirm_password">Şifre Onayı:</label>
+                        <input type="password" id="confirm_password" name="confirm_password" placeholder="Yeni şifreyi tekrar girin">
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary">Ayarları Güncelle</button>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <div class="footer">
+        Mayatech Bilgi İşlem
+    </div>
+    
+    <script>
+        function toggleMobileMenu() {
+            const menu = document.getElementById('mobileMenu');
+            menu.classList.toggle('show');
+        }
+        
+        function toggleUserMenu() {
+            const dropdown = document.getElementById('userDropdown');
+            dropdown.classList.toggle('show');
+        }
+        
+        // Kullanıcı menüsünü dışarı tıklayınca kapat
+        document.addEventListener('click', function(event) {
+            const userMenu = document.querySelector('.user-menu');
+            const dropdown = document.getElementById('userDropdown');
+            
+            if (!userMenu.contains(event.target)) {
+                dropdown.classList.remove('show');
+            }
+        });
+        
+        // Tema yönetimi
+        function toggleTheme() {
+            const body = document.body;
+            const currentTheme = body.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            
+            body.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+            
+            // İkon değiştir
+            updateThemeIcon(newTheme);
+        }
+        
+        function updateThemeIcon(theme) {
+            const icon = document.getElementById('theme-icon');
+            if (theme === 'dark') {
+                // Güneş ikonu (aydınlık moda geç)
+                icon.innerHTML = '<path d="M12 7c-2.76 0-5 2.24-5 5s2.24 5 5 5 5-2.24 5-5-2.24-5-5-5zM2 13h2c.55 0 1-.45 1-1s-.45-1-1-1H2c-.55 0-1 .45-1 1s.45 1 1 1zm18 0h2c.55 0 1-.45 1-1s-.45-1-1-1h-2c-.55 0-1 .45-1 1s.45 1 1 1zM11 2v2c0 .55.45 1 1 1s1-.45 1-1V2c0-.55-.45-1-1-1s-1 .45-1 1zm0 18v2c0 .55.45 1 1 1s1-.45 1-1v-2c0-.55-.45-1-1-1s-1 .45-1 1zM5.99 4.58c-.39-.39-1.03-.39-1.41 0-.39.39-.39 1.03 0 1.41l1.06 1.06c.39.39 1.03.39 1.41 0s.39-1.03 0-1.41L5.99 4.58zm12.37 12.37c-.39-.39-1.03-.39-1.41 0-.39.39-.39 1.03 0 1.41l1.06 1.06c.39.39 1.03.39 1.41 0 .39-.39.39-1.03 0-1.41l-1.06-1.06zm1.06-10.96c.39-.39.39-1.03 0-1.41-.39-.39-1.03-.39-1.41 0l-1.06 1.06c-.39.39-.39 1.03 0 1.41s1.03.39 1.41 0l1.06-1.06zM7.05 18.36c.39-.39.39-1.03 0-1.41-.39-.39-1.03-.39-1.41 0l-1.06 1.06c-.39.39-.39 1.03 0 1.41s1.03.39 1.41 0l1.06-1.06z"/>';
+            } else {
+                // Ay ikonu (karanlık moda geç)
+                icon.innerHTML = '<path d="M12 3c-4.97 0-9 4.03-9 9s4.03 9 9 9 9-4.03 9-9c0-.46-.04-.92-.1-1.36-.98 1.37-2.58 2.26-4.4 2.26-2.98 0-5.4-2.42-5.4-5.4 0-1.81.89-3.42 2.26-4.4-.44-.06-.9-.1-1.36-.1z"/>';
+            }
+        }
+        
+        // Sayfa yüklendiğinde tema ayarla
+        document.addEventListener('DOMContentLoaded', function() {
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            document.body.setAttribute('data-theme', savedTheme);
+            updateThemeIcon(savedTheme);
+        });
+    </script>
+</body>
+</html>

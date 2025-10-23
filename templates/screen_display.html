@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ screen.name }} - Mayatech Ekran Yöneticisi</title>
+    <style>
+        /* Screen display always uses dark theme for PDF viewing */
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Google Sans', 'Roboto', 'Segoe UI', system-ui, sans-serif;
+            background: #000;
+            color: white;
+            overflow: hidden;
+            height: 100vh;
+            position: relative;
+        }
+        
+        .pdf-container {
+            width: 100vw;
+            height: 100vh;
+            position: relative;
+        }
+        
+        .pdf-container iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+            background: white;
+        }
+        
+        /* Basit Loading Overlay */
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #000;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            color: white;
+        }
+        
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid #333;
+            border-top: 3px solid #1a73e8;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 16px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .loading-text {
+            font-size: 18px;
+            font-weight: 500;
+            color: #fff;
+        }
+        
+        /* Kırmızı Yenileme Bildirimi - TEK BAŞLIK */
+        .refresh-notification {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #ea4335;
+            color: white;
+            padding: 12px 24px;
+            border-radius: 4px;
+            font-size: 16px;
+            font-weight: 500;
+            z-index: 1001;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+            display: none;
+        }
+        
+        /* TELEPORT WATERMARK - KIRMIZI + IŞINLANMA EFEKTİ - EKRANIN ORTALARINDA */
+        .watermark {
+            position: fixed;
+            color: rgb(255, 0, 0);
+            font-size: 16px;
+            font-weight: 700;
+            z-index: 1002;
+            white-space: normal;
+            pointer-events: none;
+            animation: teleportPosition 9s step-end infinite;
+        }
+        
+        @keyframes teleportPosition {
+            0% { 
+                top: 40%; 
+                left: 30%; 
+                transform: translateX(-50%) translateY(-50%);
+                opacity: 1;
+            }
+            16.66% { 
+                top: 40%; 
+                left: 30%; 
+                transform: translateX(-50%) translateY(-50%);
+                opacity: 1;
+            }
+            33.33% { 
+                top: 50%; 
+                left: 70%; 
+                transform: translateX(-50%) translateY(-50%);
+                opacity: 1;
+            }
+            50% { 
+                top: 50%; 
+                left: 70%; 
+                transform: translateX(-50%) translateY(-50%);
+                opacity: 1;
+            }
+            66.66% { 
+                top: 60%; 
+                left: 45%; 
+                transform: translateX(-50%) translateY(-50%);
+                opacity: 1;
+            }
+            83.33% { 
+                top: 60%; 
+                left: 45%; 
+                transform: translateX(-50%) translateY(-50%);
+                opacity: 1;
+            }
+            100% { 
+                top: 40%; 
+                left: 30%; 
+                transform: translateX(-50%) translateY(-50%);
+                opacity: 1;
+            }
+        }
+        
+        .footer {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: rgba(0, 0, 0, 0.9);
+            color: #5f6368;
+            text-align: center;
+            padding: 8px;
+            font-size: 12px;
+            font-weight: 400;
+            z-index: 1003;
+        }
+    </style>
+</head>
+<body>
+    <!-- Basit Loading Overlay -->
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="spinner"></div>
+        <div class="loading-text">Yükleniyor bekle</div>
+    </div>
+    
+    <!-- Kırmızı Yenileme Bildirimi - TEK BAŞLIK -->
+    <div class="refresh-notification" id="notification">
+        Ekran yenilendi kontrol et
+    </div>
+    
+    <!-- BELİRGİN Watermark - TURUNCU + %50 OPAKLIK -->
+    <div class="watermark" id="watermark">
+        Ekran ID: {{ screen.slug }} - {{ screen.name }}<br>
+        {{ screen.location or 'Belirtilmemiş' }} - {{ current_time }}
+    </div>
+    
+    <div class="pdf-container">
+        {% if screen.pdf_path %}
+        <iframe src="/static/pdfs/{{ screen.pdf_path.split('/')[-1] }}?t={{ current_time.replace(' ', '_').replace(':', '-') }}" frameborder="0"></iframe>
+        {% else %}
+        <div style="display: flex; justify-content: center; align-items: center; height: 100vh; color: #5f6368;">
+            <div style="text-align: center;">
+                <h2>PDF henüz oluşturulmamış</h2>
+                <p>Lütfen birkaç dakika bekleyin...</p>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+    
+    <div class="footer">
+        Mayatech Bilgi İşlem fotoğraf çekmek yasaktır, ihlal halinde kanunu yaptırımlar uygulanır . hata görürseniz bilgiislem@solpro-tr.com adresine yazın.
+    </div>
+    
+    <script>
+        let refreshInterval;
+        let isRefreshing = false;
+        
+        function showNotification() {
+            const notification = document.getElementById('notification');
+            notification.style.display = 'block';
+            setTimeout(() => {
+                notification.style.display = 'none';
+            }, 5000); // 5 saniye göster
+        }
+        
+        function refreshPage() {
+            if (isRefreshing) return;
+            
+            isRefreshing = true;
+            
+            // Cache temizleme
+            if ('caches' in window) {
+                caches.keys().then(function(names) {
+                    names.forEach(function(name) {
+                        caches.delete(name);
+                    });
+                });
+            }
+            
+            // Sayfa yenileme
+            setTimeout(() => {
+                window.location.reload(true);
+            }, 1000);
+        }
+        
+        function startAutoRefresh() {
+            // İlk yükleme tamamlandıktan sonra başlat
+            setTimeout(() => {
+                document.getElementById('loadingOverlay').style.display = 'none';
+                
+                // Sayfa yüklendikten sonra bildirimi göster
+                showNotification();
+                
+                // 10 saniyede bir yenile
+                refreshInterval = setInterval(refreshPage, 10000);
+            }, 2000);
+        }
+        
+        // Screen display always uses dark theme for PDF viewing
+        
+        // Sayfa yüklendiğinde başlat
+        window.addEventListener('load', startAutoRefresh);
+        
+        // Sayfa kapatılırken temizlik
+        window.addEventListener('beforeunload', function() {
+            if (refreshInterval) {
+                clearInterval(refreshInterval);
+            }
+        });
+    </script>
+</body>
+</html>
